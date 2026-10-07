@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "model-test": "tsx --env-file=.env.local scripts/model-test.ts",
+    "list-models": "tsx --env-file=.env.local scripts/list-models.ts"
   },
   "dependencies": {
     "openai": "^7.30.0",
@@ -25,6 +27,7 @@
     "oxlint": "^1.81.0",
     "prettier": "^3.9.9",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.3"

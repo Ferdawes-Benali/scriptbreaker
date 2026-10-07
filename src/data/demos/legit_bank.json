@@ -1,0 +1,15 @@
+{
+  "id": "legit_bank",
+  "title": "Real bank fraud alert (legitimate)",
+  "isScam": false,
+  "playbookId": null,
+  "note": "Scripted example of how a real bank alert usually sounds.",
+  "lines": [
+    { "speaker": "them", "text": "Hello, this is the fraud prevention team at your bank, calling about your card.", "expect": ["bank_safe_account.fraud_team_contact"] },
+    { "speaker": "them", "text": "We noticed an unusual payment of 240 euros at an online store.", "expect": ["bank_safe_account.account_threat"] },
+    { "speaker": "me", "text": "I didn't make that payment." },
+    { "speaker": "them", "text": "No problem. Please never share a code with anyone, we will never ask you for one.", "expect": [], "legit": true },
+    { "speaker": "them", "text": "You can block the payment yourself in your banking app, or call the number on the back of your card.", "expect": [], "legit": true },
+    { "speaker": "them", "text": "No action is needed on this call. Have a good day.", "expect": [] }
+  ]
+}
