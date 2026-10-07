@@ -1,0 +1,17 @@
+{
+  "id": "bank_scam",
+  "title": "Fake bank fraud team (scam)",
+  "isScam": true,
+  "playbookId": "bank_safe_account",
+  "note": "Scripted role-play written by the team. Not a real call.",
+  "lines": [
+    { "speaker": "them", "text": "Hi Maya, this is Daniel from the fraud department at your bank.", "expect": ["bank_safe_account.fraud_team_contact"] },
+    { "speaker": "them", "text": "We've flagged two suspicious transactions on your account this morning.", "expect": ["bank_safe_account.account_threat"] },
+    { "speaker": "me", "text": "Oh no, what kind of transactions?" },
+    { "speaker": "them", "text": "Please don't hang up, and don't tell anyone at the branch. We believe an employee may be involved.", "expect": ["bank_safe_account.isolate"] },
+    { "speaker": "me", "text": "Okay... what do I need to do?" },
+    { "speaker": "them", "text": "To protect your savings, we need you to transfer them to a secure holding account right now.", "expect": ["bank_safe_account.safe_account_transfer"] },
+    { "speaker": "me", "text": "I'll hang up and call the number on the back of my card." },
+    { "speaker": "them", "text": "No, no. If you hang up, the transfer can't be stopped. Stay with me.", "expect": ["bank_safe_account.block_verification"] }
+  ]
+}
