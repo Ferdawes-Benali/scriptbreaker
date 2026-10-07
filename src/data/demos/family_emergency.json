@@ -1,0 +1,16 @@
+{
+  "id": "family_emergency",
+  "title": "Grandson in trouble (scam)",
+  "isScam": true,
+  "playbookId": "family_emergency",
+  "note": "Scripted role-play written by the team. Not a real call.",
+  "lines": [
+    { "speaker": "them", "text": "Grandma? It's me, Sam. I'm in trouble, I've been in an accident.", "expect": ["family_emergency.distress_call"] },
+    { "speaker": "them", "text": "Hello ma'am, this is officer Daniels. Your grandson hit a car and he is being held.", "expect": ["family_emergency.authority_handoff"] },
+    { "speaker": "them", "text": "Please don't tell mom and dad, I'm so embarrassed.", "expect": ["family_emergency.keep_secret"] },
+    { "speaker": "me", "text": "Sam, what happened? Are you hurt?" },
+    { "speaker": "them", "text": "I need money for bail today, 2,000 dollars. You can buy gift cards at the pharmacy.", "expect": ["family_emergency.urgent_payment"] },
+    { "speaker": "me", "text": "Let me call you back on your usual number." },
+    { "speaker": "them", "text": "There's no time for that, my phone is broken. Why don't you trust me?", "expect": ["family_emergency.block_verification"] }
+  ]
+}
