@@ -6,4 +6,4 @@
 - **Playbooks are TypeScript objects**, not JSON files, so the Vercel function can import them without JSON-module issues. They are validated with Zod at load time.
 - **Relative imports use `.js` extensions** in `src/engine`, `src/server` and `api`, because Vercel runs functions as Node ES modules.
 - **Keyword fallback tagger:** if the API fails, lines are tagged with keyword rules and marked `[keywords]` in the UI.
-- **Model choice:** _fill in after `npm run model-test`._
+- **Model choice:** `openai/gpt-oss-20b` primary, `openai/gpt-oss-120b` fallback (both 7/7 on the model test, ~530 ms per line). Qwen dropped: 1,000 output tokens/min on the free tier.

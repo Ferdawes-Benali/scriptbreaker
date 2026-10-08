@@ -2,9 +2,14 @@ import { keywordTag } from './keywordTagger'
 import { PLAYBOOKS } from './playbooks'
 import { TagSchema, type TaggedUtterance, type Utterance } from './types'
 
+/** Same line, same answer: replays don't spend the free-tier quota twice. */
+const cache = new Map<string, TaggedUtterance['tag']>()
+
 /** Tag one "them" line with the AI tagger; fall back to keyword rules if the API fails. */
 export async function tagUtterance(u: Utterance, previous: Utterance[]): Promise<TaggedUtterance> {
   if (u.speaker === 'me') return { ...u, tag: { tactics: [], stages: [], quote: '' }, source: 'keywords' }
+  const cached = cache.get(u.text)
+  if (cached) return { ...u, tag: cached, source: 'llm' }
   try {
     const res = await fetch('/api/tag', {
       method: 'POST',
@@ -16,7 +21,9 @@ export async function tagUtterance(u: Utterance, previous: Utterance[]): Promise
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
-    return { ...u, tag: TagSchema.parse(data.tag), source: 'llm' }
+    const tag = TagSchema.parse(data.tag)
+    cache.set(u.text, tag)
+    return { ...u, tag, source: 'llm' }
   } catch {
     return { ...u, tag: keywordTag(u.text, PLAYBOOKS), source: 'keywords' }
   }
