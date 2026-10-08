@@ -19,10 +19,12 @@ export function useConversation() {
   const generation = useRef(0) // bumps on reset so late answers from an old run are dropped
   const all = useRef<Utterance[]>([]) // plain copy of every line, for tagging context
 
-  const addLine = useCallback((speaker: Speaker, text: string) => {
+  /** speaker 'auto' = we don't know who spoke; the AI decides. */
+  const addLine = useCallback((speaker: Speaker | 'auto', text: string) => {
     const clean = text.trim()
     if (!clean) return
-    const line: ConversationLine = { id: nextId.current++, speaker, text: clean }
+    const auto = speaker === 'auto'
+    const line: ConversationLine = { id: nextId.current++, speaker: auto ? 'them' : speaker, text: clean, autoSpeaker: auto }
     const gen = generation.current
     all.current = [...all.current, line]
     setLines((prev) => [...prev, line])
@@ -32,8 +34,19 @@ export function useConversation() {
       const previous = all.current.filter((l) => l.id < line.id)
       const tagged = await tagUtterance(line, previous)
       if (gen !== generation.current) return
-      setLines((prev) => prev.map((l) => (l.id === line.id ? { ...l, tagged } : l)))
+      setLines((prev) => prev.map((l) => (l.id === line.id ? { ...l, speaker: tagged.speaker, tagged } : l)))
     })
+  }, [])
+
+  /** Fix a wrong speaker after the fact. Only lines the AI read (auto) carry tactics, so flipping is meaningful. */
+  const flipSpeaker = useCallback((id: number) => {
+    setLines((prev) =>
+      prev.map((l) => {
+        if (l.id !== id || !l.tagged) return l
+        const speaker: Speaker = l.speaker === 'them' ? 'me' : 'them'
+        return { ...l, speaker, tagged: { ...l.tagged, speaker } }
+      }),
+    )
   }, [])
 
   const reset = useCallback(() => {
@@ -58,7 +71,7 @@ export function useConversation() {
   const pending = lines.length - tagged.length
   const usedFallback = tagged.some((t) => t.speaker === 'them' && t.source === 'keywords')
 
-  return { lines, addLine, reset, result, pending, usedFallback }
+  return { lines, addLine, flipSpeaker, reset, result, pending, usedFallback }
 }
 
 /** Plays a scripted conversation line by line at roughly speaking speed. */

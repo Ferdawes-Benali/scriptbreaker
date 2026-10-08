@@ -5,6 +5,7 @@ import { configFromEnv, tagLine } from '../src/server/tagger.js'
 
 const BodySchema = z.object({
   text: z.string().min(1).max(600),
+  autoSpeaker: z.boolean().optional(),
   context: z
     .array(z.object({ speaker: z.enum(['them', 'me']), text: z.string().max(600) }))
     .max(4)

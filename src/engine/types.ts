@@ -50,6 +50,8 @@ export interface Utterance {
   id: number
   speaker: Speaker
   text: string
+  /** True when nobody said who spoke (live mic, unlabelled paste): the tagger decides. */
+  autoSpeaker?: boolean
 }
 
 /** What the tagger (LLM or keyword fallback) returns for one line. */
@@ -59,6 +61,8 @@ export const TagSchema = z.object({
   stages: z.array(z.string()).default([]),
   /** The exact words that justify the tags, copied from the line. */
   quote: z.string().default(''),
+  /** Who the tagger thinks said the line, when asked (auto speaker mode). */
+  speaker: z.enum(['them', 'me']).optional(),
 })
 export type Tag = z.infer<typeof TagSchema>
 

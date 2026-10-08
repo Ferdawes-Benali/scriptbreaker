@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import { DEMOS } from '@/engine/demos'
 import { getPlaybook } from '@/engine/playbooks'
 import { parseConversation } from '@/engine/tagClient'
-import type { Speaker } from '@/engine/types'
 import { useConversation, useReplay } from '@/hooks/useConversation'
 import { speechSupported, useSpeech } from '@/hooks/useSpeech'
 import { RiskMeter } from '@/components/RiskMeter'
@@ -28,11 +27,11 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('replay')
   const [demoId, setDemoId] = useState(DEMOS[0].id)
   const [pasted, setPasted] = useState(EXAMPLE_PASTE)
-  const [speaker, setSpeaker] = useState<Speaker>('them')
   const [typed, setTyped] = useState('')
 
   const replay = useReplay(addLine)
-  const speech = useSpeech(useCallback((text: string) => addLine(speaker, text), [addLine, speaker]))
+  // Live and typed lines don't say who spoke: the AI works it out from the words.
+  const speech = useSpeech(useCallback((text: string) => addLine('auto', text), [addLine]))
 
   const playbook = convo.result.leader && getPlaybook(convo.result.leader.playbookId)
 
@@ -57,7 +56,7 @@ export default function App() {
 
   function sendTyped(e: React.FormEvent) {
     e.preventDefault()
-    addLine(speaker, typed)
+    addLine('auto', typed)
     setTyped('')
   }
 
@@ -74,6 +73,15 @@ export default function App() {
           <RiskMeter risk={convo.result.risk} playbookName={playbook?.name} />
         </div>
       </header>
+
+      {/* The one thing you must not miss mid-call. */}
+      {convo.result.risk >= 70 && (
+        <div role="alert" className="bg-alarm text-white">
+          <div className="mx-auto max-w-6xl px-4 py-3 text-lg font-semibold sm:px-6">
+            Hang up: this call matches a known scam script. Call the organisation back on a number you already have.
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         {/* Mode switch */}
@@ -133,7 +141,7 @@ export default function App() {
           {mode === 'paste' && (
             <div className="flex flex-col gap-3">
               <label htmlFor="paste" className="text-sm text-ink-soft">
-                One line per message. Start lines with "Them:" or "Me:".
+                One line per message. Start lines with "Them:" or "Me:" if you know who said them; otherwise Scriptbreaker works it out.
               </label>
               <textarea
                 id="paste"
@@ -153,8 +161,9 @@ export default function App() {
           {mode === 'live' && (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-ink-soft">
-                Put the call on speaker next to this laptop. Switch who is talking so Scriptbreaker only reads the caller.
-                Audio is turned into text by your browser; nothing is recorded.
+                Put the call on speaker next to this laptop and press Start. You don't need to do anything else: Scriptbreaker
+                works out who is talking and warns you if the call follows a scam script. Audio is turned into text by your
+                browser; nothing is recorded.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 {speech.listening ? (
@@ -170,19 +179,6 @@ export default function App() {
                     Start listening
                   </button>
                 )}
-                <div role="radiogroup" aria-label="Who is talking" className="flex overflow-hidden rounded-md border border-ink">
-                  {(['them', 'me'] as const).map((s) => (
-                    <button
-                      key={s}
-                      role="radio"
-                      aria-checked={speaker === s}
-                      onClick={() => setSpeaker(s)}
-                      className={`px-3 py-2 text-sm font-semibold ${speaker === s ? 'bg-ink text-sheet' : 'bg-white'}`}
-                    >
-                      {s === 'them' ? 'Caller is talking' : 'I am talking'}
-                    </button>
-                  ))}
-                </div>
               </div>
               {!speechSupported && <p className="text-sm text-alarm">Live listening needs Chrome or Edge. You can still type lines below.</p>}
               {speech.error && <p className="text-sm text-alarm">{speech.error}</p>}
@@ -190,7 +186,7 @@ export default function App() {
                 <input
                   value={typed}
                   onChange={(e) => setTyped(e.target.value)}
-                  placeholder={speaker === 'them' ? 'Type what the caller said' : 'Type what you said'}
+                  placeholder="Or type a line from the call"
                   className="flex-1 rounded-md border border-rule bg-white px-3 py-2"
                 />
                 <button className="rounded-md border border-ink px-3 py-2 font-semibold">Add line</button>
@@ -206,7 +202,7 @@ export default function App() {
               lines={convo.lines}
               history={convo.result.history}
               interim={speech.interim}
-              interimSpeaker={speaker}
+              onFlip={convo.flipSpeaker}
             />
           </section>
           <aside className="rounded-lg bg-sheet">
