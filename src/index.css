@@ -1,1 +1,54 @@
 @import "tailwindcss";
+
+/*
+  Scriptbreaker tokens.
+  Paper:  cool grey-blue page, like a printed call log
+  Ink:    deep navy for text
+  Cue:    amber stage-cue light, used ONLY for the prediction
+  Alarm:  brick red for high risk and scammer pressure
+  Safe:   teal for legitimate signals and the break move
+*/
+@theme {
+  --color-paper: #e8edf2;
+  --color-sheet: #f7f9fb;
+  --color-ink: #16203a;
+  --color-ink-soft: #4a5570;
+  --color-rule: #c9d2dc;
+  --color-cue: #f0a202;
+  --color-cue-soft: #fff3d6;
+  --color-alarm: #b8322a;
+  --color-alarm-soft: #f8e1df;
+  --color-safe: #17705f;
+  --color-safe-soft: #dcefea;
+
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "Courier Prime", "Courier New", ui-monospace, monospace;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-cue);
+  outline-offset: 2px;
+}
+
+@keyframes cue-in {
+  from { transform: translateY(6px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes stamp {
+  0% { transform: scale(1.6) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(0.95) rotate(-4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-4deg); opacity: 1; }
+}
+.animate-cue { animation: cue-in 320ms ease-out; }
+.animate-stamp { animation: stamp 420ms cubic-bezier(.2,.8,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-cue, .animate-stamp { animation: none; }
+}
