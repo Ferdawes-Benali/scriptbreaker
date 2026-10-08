@@ -7,11 +7,12 @@ interface Props {
   lines: ConversationLine[]
   history: Prediction[]
   interim?: string
-  interimSpeaker?: 'them' | 'me'
+  /** Swap Caller/You on a line the AI attributed wrongly. */
+  onFlip?: (id: number) => void
 }
 
 /** The call, set like a screenplay: the scam is a script, so we print it as one. */
-export function Transcript({ lines, history, interim, interimSpeaker }: Props) {
+export function Transcript({ lines, history, interim, onFlip }: Props) {
   const end = useRef<HTMLDivElement>(null)
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -33,10 +34,26 @@ export function Transcript({ lines, history, interim, interimSpeaker }: Props) {
         const tactics = l.tagged?.tag.tactics ?? []
         return (
           <div key={l.id} className="mb-5">
-            <div className={`mb-1 text-center font-bold ${them ? 'text-ink' : 'text-ink-soft'}`}>{them ? 'Caller' : 'You'}</div>
+            <div className={`mb-1 text-center font-bold ${them ? 'text-ink' : 'text-ink-soft'}`}>
+              {l.autoSpeaker && !l.tagged ? (
+                <span className="font-normal text-ink-soft">…</span>
+              ) : l.autoSpeaker && onFlip ? (
+                <button
+                  onClick={() => onFlip(l.id)}
+                  title="Wrong person? Click to swap Caller and You."
+                  className="rounded px-1 underline decoration-rule decoration-dotted underline-offset-4 hover:bg-paper"
+                >
+                  {them ? 'Caller' : 'You'}
+                </button>
+              ) : them ? (
+                'Caller'
+              ) : (
+                'You'
+              )}
+            </div>
             <p className={`mx-auto max-w-[36ch] ${them ? '' : 'text-ink-soft'}`}>{l.text}</p>
 
-            {them && (
+            {them && (l.tagged || !l.autoSpeaker) && (
               <div className="mx-auto mt-2 flex max-w-[44ch] flex-wrap items-center justify-center gap-1.5 font-sans text-xs">
                 {!l.tagged && <span className="text-ink-soft">reading…</span>}
                 {tactics.map((t) => (
@@ -69,7 +86,7 @@ export function Transcript({ lines, history, interim, interimSpeaker }: Props) {
 
       {interim && (
         <div className="mb-5 opacity-60">
-          <div className="mb-1 text-center font-bold">{interimSpeaker === 'me' ? 'You' : 'Caller'}</div>
+          <div className="mb-1 text-center text-ink-soft">listening…</div>
           <p className="mx-auto max-w-[36ch] italic">{interim}</p>
         </div>
       )}
