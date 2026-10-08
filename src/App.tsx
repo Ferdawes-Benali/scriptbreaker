@@ -201,6 +201,7 @@ export default function App() {
             <Transcript
               lines={convo.lines}
               history={convo.result.history}
+              reactions={convo.result.reactions}
               interim={speech.interim}
               onFlip={convo.flipSpeaker}
             />

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "model-test": "tsx --env-file=.env.local scripts/model-test.ts",
-    "list-models": "tsx --env-file=.env.local scripts/list-models.ts"
+    "list-models": "tsx --env-file=.env.local scripts/list-models.ts",
+    "eval": "tsx --env-file=.env.local eval/run-eval.ts"
   },
   "dependencies": {
     "openai": "^7.30.0",

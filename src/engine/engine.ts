@@ -3,6 +3,7 @@ import type {
   Playbook,
   PlaybookState,
   Prediction,
+  Reaction,
   TaggedUtterance,
 } from './types.js'
 
@@ -24,6 +25,35 @@ const OUT_OF_ORDER_CREDIT = 0.5
 const BIG_JUMP_CREDIT = 0.8
 /** Each "official channel" signal (e.g. "open your banking app") lowers every score. */
 const OFFICIAL_CHANNEL_PENALTY = 1.5
+/** Resisting a verification attempt is the strongest scam signal we have. */
+const DEFLECT_BONUS = 2.5
+/** Calmly accepting a call-back or check is a good sign. */
+const ACCEPT_PENALTY = 2
+
+/** Your line tries to verify the caller: call back, safe word, branch, video, official app. */
+export function isVerificationAttempt(u: TaggedUtterance): boolean {
+  if (u.speaker !== 'me') return false
+  if (u.tag.tactics.includes('official_channel')) return true
+  return /\b(call (you|them|my bank|the bank|it) back|call back|hang up|number on (the back of )?(my|the) card|safe ?word|video call|go to the branch|visit the branch|check (with|on)|verify|official (number|website|app)|my usual number)\b/i.test(
+    u.text,
+  )
+}
+
+/** Their reply to a verification attempt: pushing back or adding pressure = deflect. */
+function judgeReply(u: TaggedUtterance): Reaction['verdict'] {
+  const t = u.tag.tactics
+  if (t.includes('official_channel')) return 'accept'
+  if (t.some((x) => x === 'verification_avoidance' || x === 'isolation' || x === 'urgency' || x === 'fear' || x === 'secrecy'))
+    return 'deflect'
+  if (/\b(don'?t hang up|no time|can'?t|stay (on the line|with me)|why (don'?t|won'?t) you trust)\b/i.test(u.text)) return 'deflect'
+  return 'accept'
+}
+
+function adjust(p: Playbook, s: PlaybookState, delta: number): PlaybookState {
+  if (s.score <= 0) return s
+  const score = Math.max(0, s.score + delta)
+  return { ...s, score, risk: Math.min(100, Math.round((100 * score) / maxScore(p))) }
+}
 
 function maxScore(p: Playbook): number {
   return p.stages.filter((s) => !s.optional).reduce((sum, s) => sum + s.weight, 0)
@@ -99,11 +129,25 @@ export function runEngine(playbooks: Playbook[], conversation: TaggedUtterance[]
   let states = playbooks.map(emptyState)
   const history: Prediction[] = []
   let open: Prediction | undefined
+  const reactions: Reaction[] = []
+  let pendingAttempt: number | undefined
 
   for (const u of conversation) {
-    if (u.speaker !== 'them') continue
+    if (u.speaker === 'me') {
+      if (isVerificationAttempt(u)) pendingAttempt = u.id
+      continue
+    }
 
     states = states.map((s, i) => applyUtterance(playbooks[i], s, u))
+
+    // First reply after you tried to verify: judge it.
+    if (pendingAttempt !== undefined) {
+      const verdict = judgeReply(u)
+      reactions.push({ attemptId: pendingAttempt, replyId: u.id, verdict })
+      const delta = verdict === 'deflect' ? DEFLECT_BONUS : -ACCEPT_PENALTY
+      states = states.map((s, i) => adjust(playbooks[i], s, delta))
+      pendingAttempt = undefined
+    }
     const leader = rank(states)[0]
     const p = playbooks.find((pb) => pb.id === leader.playbookId)!
 
@@ -145,5 +189,6 @@ export function runEngine(playbooks: Playbook[], conversation: TaggedUtterance[]
     currentStage,
     prediction: latest && !latest.fulfilledBy && (leader?.risk ?? 0) >= PREDICTION_THRESHOLD ? latest : undefined,
     history,
+    reactions,
   }
 }
