@@ -37,6 +37,16 @@ function signalMatches(line: string, signal: string): boolean {
   return hit >= Math.min(2, sig.length)
 }
 
+/**
+ * Offline guess of who spoke, used only when the AI is unreachable.
+ * The person being called mostly reacts and asks; the caller claims and instructs.
+ */
+export function guessSpeaker(text: string): 'them' | 'me' {
+  const t = text.trim().toLowerCase()
+  if (/^(oh|ok|okay|what|why|who|how|really|wait|sorry|yes|yeah|sure|hmm|um|no,? i|i |i'm|i'll|i don't|i didn't|let me|can i|should i)\b/.test(t)) return 'me'
+  return 'them'
+}
+
 export function keywordTag(text: string, playbooks: Playbook[]): Tag {
   const tactics = (Object.keys(TACTIC_RULES) as Tactic[]).filter((t) => TACTIC_RULES[t].test(text))
   const stages: string[] = []
