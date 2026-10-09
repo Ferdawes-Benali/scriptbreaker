@@ -1,4 +1,4 @@
-import type { Playbook, Tactic, Tag } from './types'
+import type { Playbook, Tactic, Tag } from './types.js'
 
 /**
  * Offline fallback tagger. No AI: plain keyword rules.

@@ -52,6 +52,8 @@ export interface Utterance {
   text: string
   /** True when nobody said who spoke (live mic, unlabelled paste): the tagger decides. */
   autoSpeaker?: boolean
+  /** Never send this line to the AI (quarantined email): keyword rules only. */
+  offline?: boolean
 }
 
 /** What the tagger (LLM or keyword fallback) returns for one line. */
@@ -94,6 +96,16 @@ export interface Prediction {
   fulfilledBy?: number
 }
 
+/** How the caller answered when you tried to verify them (call back, safe word, branch...). */
+export interface Reaction {
+  /** Your line that tried to verify. */
+  attemptId: number
+  /** Their next line. */
+  replyId: number
+  /** deflect = resisted or pressured; accept = went along with checking. */
+  verdict: 'deflect' | 'accept'
+}
+
 export interface EngineResult {
   states: PlaybookState[]
   /** Sorted by score, highest first. */
@@ -103,4 +115,6 @@ export interface EngineResult {
   prediction?: Prediction
   /** Every prediction made so far, newest last. */
   history: Prediction[]
+  /** Every verification attempt that got a reply, oldest first. */
+  reactions: Reaction[]
 }

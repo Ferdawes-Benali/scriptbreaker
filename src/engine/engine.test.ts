@@ -111,3 +111,40 @@ describe('keyword fallback tagger', () => {
     expect(r.prediction).toBeUndefined()
   })
 })
+
+describe('reaction judge', () => {
+  const u = (id: number, speaker: 'them' | 'me', text: string, tactics: string[] = [], stages: string[] = []) =>
+    ({ id, speaker, text, source: 'keywords', tag: { tactics, stages, quote: '' } }) as TaggedUtterance
+
+  const opening = [
+    u(0, 'them', 'This is the fraud department at your bank.', ['authority'], ['bank_safe_account.fraud_team_contact']),
+    u(1, 'them', 'There are suspicious charges on your account.', ['problem_creation'], ['bank_safe_account.account_threat']),
+  ]
+
+  it('flags a caller who pushes back when you offer to call back', () => {
+    const convo = [
+      ...opening,
+      u(2, 'me', "I'll hang up and call the number on the back of my card."),
+      u(3, 'them', "No, if you hang up it can't be stopped. Stay with me.", ['verification_avoidance', 'urgency']),
+    ]
+    const r = runEngine(PLAYBOOKS, convo)
+    expect(r.reactions).toEqual([{ attemptId: 2, replyId: 3, verdict: 'deflect' }])
+    expect(r.risk).toBeGreaterThan(runEngine(PLAYBOOKS, opening).risk)
+  })
+
+  it('lowers risk when the caller happily accepts a call-back', () => {
+    const convo = [
+      ...opening,
+      u(2, 'me', "I'll call you back on the number on my card."),
+      u(3, 'them', 'Of course, please do. You can also check in your banking app.', ['official_channel']),
+    ]
+    const r = runEngine(PLAYBOOKS, convo)
+    expect(r.reactions[0].verdict).toBe('accept')
+    expect(r.risk).toBeLessThan(runEngine(PLAYBOOKS, opening).risk)
+  })
+
+  it('ignores ordinary questions from you', () => {
+    const r = runEngine(PLAYBOOKS, [...opening, u(2, 'me', 'Oh no, what happened?'), u(3, 'them', 'Two charges.')])
+    expect(r.reactions).toEqual([])
+  })
+})

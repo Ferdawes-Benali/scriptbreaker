@@ -19,3 +19,20 @@ describe('speaker handling', () => {
     expect(guessSpeaker('Transfer your savings to a secure account now.')).toBe('them')
   })
 })
+
+import { splitSentences } from './tagClient'
+
+describe('splitSentences', () => {
+  it('splits an email into sentence lines and merges tiny fragments', () => {
+    const s = splitSentences('Dear customer. We detected suspicious transactions on your account. Do not contact your branch! Move your funds now.')
+    expect(s).toEqual([
+      'Dear customer. We detected suspicious transactions on your account.',
+      'Do not contact your branch! Move your funds now.',
+    ])
+  })
+
+  it('caps the number of lines', () => {
+    const body = Array.from({ length: 30 }, (_, i) => `This is sentence number ${i} of a long email.`).join(' ')
+    expect(splitSentences(body, 10)).toHaveLength(10)
+  })
+})

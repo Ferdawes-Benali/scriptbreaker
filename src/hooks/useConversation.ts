@@ -20,11 +20,17 @@ export function useConversation() {
   const all = useRef<Utterance[]>([]) // plain copy of every line, for tagging context
 
   /** speaker 'auto' = we don't know who spoke; the AI decides. */
-  const addLine = useCallback((speaker: Speaker | 'auto', text: string) => {
+  const addLine = useCallback((speaker: Speaker | 'auto', text: string, opts: { offline?: boolean } = {}) => {
     const clean = text.trim()
     if (!clean) return
     const auto = speaker === 'auto'
-    const line: ConversationLine = { id: nextId.current++, speaker: auto ? 'them' : speaker, text: clean, autoSpeaker: auto }
+    const line: ConversationLine = {
+      id: nextId.current++,
+      speaker: auto ? 'them' : speaker,
+      text: clean,
+      autoSpeaker: auto,
+      offline: opts.offline,
+    }
     const gen = generation.current
     all.current = [...all.current, line]
     setLines((prev) => [...prev, line])
@@ -69,7 +75,8 @@ export function useConversation() {
 
   const result = useMemo(() => runEngine(PLAYBOOKS, tagged), [tagged])
   const pending = lines.length - tagged.length
-  const usedFallback = tagged.some((t) => t.speaker === 'them' && t.source === 'keywords')
+  // Quarantined (offline) lines use keyword rules on purpose; only count real AI failures.
+  const usedFallback = tagged.some((t) => t.speaker === 'them' && t.source === 'keywords' && !t.offline)
 
   return { lines, addLine, flipSpeaker, reset, result, pending, usedFallback }
 }

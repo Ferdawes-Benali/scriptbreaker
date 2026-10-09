@@ -1,18 +1,21 @@
 import { useEffect, useRef } from 'react'
 import type { ConversationLine } from '@/hooks/useConversation'
-import type { Prediction } from '@/engine/types'
+import type { Prediction, Reaction } from '@/engine/types'
 import { TACTIC_LABEL } from '@/lib/labels'
 
 interface Props {
   lines: ConversationLine[]
   history: Prediction[]
+  reactions: Reaction[]
   interim?: string
   /** Swap Caller/You on a line the AI attributed wrongly. */
   onFlip?: (id: number) => void
+  /** Name shown for the other party: "Caller" for calls, "Email" for emails. */
+  themLabel?: string
 }
 
 /** The call, set like a screenplay: the scam is a script, so we print it as one. */
-export function Transcript({ lines, history, interim, onFlip }: Props) {
+export function Transcript({ lines, history, reactions, interim, onFlip, themLabel = 'Caller' }: Props) {
   const end = useRef<HTMLDivElement>(null)
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -31,6 +34,7 @@ export function Transcript({ lines, history, interim, onFlip }: Props) {
       {lines.map((l) => {
         const them = l.speaker === 'them'
         const fulfilled = history.find((p) => p.fulfilledBy === l.id)
+        const reaction = reactions.find((r) => r.replyId === l.id)
         const tactics = l.tagged?.tag.tactics ?? []
         return (
           <div key={l.id} className="mb-5">
@@ -43,10 +47,10 @@ export function Transcript({ lines, history, interim, onFlip }: Props) {
                   title="Wrong person? Click to swap Caller and You."
                   className="rounded px-1 underline decoration-rule decoration-dotted underline-offset-4 hover:bg-paper"
                 >
-                  {them ? 'Caller' : 'You'}
+                  {them ? themLabel : 'You'}
                 </button>
               ) : them ? (
-                'Caller'
+                themLabel
               ) : (
                 'You'
               )}
@@ -68,6 +72,20 @@ export function Transcript({ lines, history, interim, onFlip }: Props) {
                 {l.tagged?.source === 'keywords' && (
                   <span className="text-ink-soft" title="The AI tagger was unreachable, so simple keyword rules labelled this line.">
                     keyword rules
+                  </span>
+                )}
+              </div>
+            )}
+
+            {reaction && (
+              <div className="mt-2 flex justify-center font-sans">
+                {reaction.verdict === 'deflect' ? (
+                  <span className="max-w-[44ch] rounded-md bg-alarm px-2.5 py-1 text-center text-sm font-semibold text-white">
+                    Pushed back when you tried to check. Real organisations let you call back.
+                  </span>
+                ) : (
+                  <span className="max-w-[44ch] rounded-md bg-safe px-2.5 py-1 text-center text-sm font-semibold text-white">
+                    Accepted your check. A good sign, but still call back yourself.
                   </span>
                 )}
               </div>
