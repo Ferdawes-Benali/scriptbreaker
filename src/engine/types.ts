@@ -52,6 +52,8 @@ export interface Utterance {
   text: string
   /** True when nobody said who spoke (live mic, unlabelled paste): the tagger decides. */
   autoSpeaker?: boolean
+  /** Never send this line to the AI (quarantined email): keyword rules only. */
+  offline?: boolean
 }
 
 /** What the tagger (LLM or keyword fallback) returns for one line. */

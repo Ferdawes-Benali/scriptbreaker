@@ -8,6 +8,7 @@ const cache = new Map<string, TaggedUtterance['tag']>()
 /** Tag one "them" line with the AI tagger; fall back to keyword rules if the API fails. */
 export async function tagUtterance(u: Utterance, previous: Utterance[]): Promise<TaggedUtterance> {
   if (u.speaker === 'me' && !u.autoSpeaker) return { ...u, tag: { tactics: [], stages: [], quote: '' }, source: 'keywords' }
+  if (u.offline) return withSpeaker(u, keywordTag(u.text, PLAYBOOKS), 'keywords')
   const key = `${u.autoSpeaker ? 'auto' : 'them'}|${u.text}`
   const cached = cache.get(key)
   if (cached) return withSpeaker(u, cached, 'llm')
@@ -36,6 +37,21 @@ export async function tagUtterance(u: Utterance, previous: Utterance[]): Promise
 function withSpeaker(u: Utterance, tag: TaggedUtterance['tag'], source: TaggedUtterance['source']): TaggedUtterance {
   const speaker = u.autoSpeaker ? (tag.speaker ?? 'them') : u.speaker
   return { ...u, speaker, tag, source }
+}
+
+/** Split an email body into sentence-sized lines for the tagger (max `limit`, short fragments merged). */
+export function splitSentences(body: string, limit = 10): string[] {
+  const parts = body
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+(?=[A-Z0-9"'(])/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+  const out: string[] = []
+  for (const p of parts) {
+    if (out.length && (out[out.length - 1].length < 40 || p.length < 15)) out[out.length - 1] += ' ' + p
+    else out.push(p)
+  }
+  return out.slice(0, limit).map((s) => s.slice(0, 600))
 }
 
 /** Parse "Them: ..." / "Me: ..." lines. Lines without a prefix are left to the AI to attribute. */

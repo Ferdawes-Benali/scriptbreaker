@@ -18,16 +18,18 @@ function localApi(): Plugin {
 
       server.middlewares.use(async (req, res, next) => {
         const match = req.url?.match(/^\/api\/([a-z-]+)$/)
-        if (!match || req.method !== 'POST') return next()
+        const method = req.method === 'GET' ? 'GET' : req.method === 'POST' ? 'POST' : undefined
+        if (!match || !method) return next()
         try {
           const mod = await server.ssrLoadModule(`/api/${match[1]}.ts`)
+          if (typeof mod[method] !== 'function') return next()
           const chunks: Buffer[] = []
           for await (const c of req) chunks.push(c as Buffer)
-          const response: Response = await mod.POST(
+          const response: Response = await mod[method](
             new Request(`http://localhost${req.url}`, {
-              method: 'POST',
+              method,
               headers: { 'content-type': 'application/json' },
-              body: Buffer.concat(chunks).toString(),
+              body: method === 'POST' ? Buffer.concat(chunks).toString() : undefined,
             }),
           )
           res.statusCode = response.status

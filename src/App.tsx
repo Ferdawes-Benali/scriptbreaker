@@ -1,19 +1,21 @@
 import { useCallback, useState } from 'react'
 import { DEMOS } from '@/engine/demos'
 import { getPlaybook } from '@/engine/playbooks'
-import { parseConversation } from '@/engine/tagClient'
+import { parseConversation, splitSentences } from '@/engine/tagClient'
 import { useConversation, useReplay } from '@/hooks/useConversation'
 import { speechSupported, useSpeech } from '@/hooks/useSpeech'
 import { RiskMeter } from '@/components/RiskMeter'
 import { Transcript } from '@/components/Transcript'
 import { ScriptPanel } from '@/components/ScriptPanel'
+import { EmailPanel, type InboxEmail } from '@/components/EmailPanel'
 
-type Mode = 'replay' | 'paste' | 'live'
+type Mode = 'replay' | 'paste' | 'live' | 'email'
 
 const MODES: { id: Mode; label: string }[] = [
   { id: 'replay', label: 'Replay a call' },
   { id: 'paste', label: 'Paste a chat' },
   { id: 'live', label: 'Listen live' },
+  { id: 'email', label: 'Check an email' },
 ]
 
 const EXAMPLE_PASTE = `Them: Hello, this is the tax office. You have an unpaid toll from last month.
@@ -28,6 +30,7 @@ export default function App() {
   const [demoId, setDemoId] = useState(DEMOS[0].id)
   const [pasted, setPasted] = useState(EXAMPLE_PASTE)
   const [typed, setTyped] = useState('')
+  const [email, setEmail] = useState<InboxEmail>()
 
   const replay = useReplay(addLine)
   // Live and typed lines don't say who spoke: the AI works it out from the words.
@@ -39,6 +42,7 @@ export default function App() {
     replay.stop()
     speech.stop()
     reset()
+    setEmail(undefined)
     setMode(m)
   }
 
@@ -52,6 +56,13 @@ export default function App() {
   function readPasted() {
     reset()
     for (const u of parseConversation(pasted)) addLine(u.speaker, u.text)
+  }
+
+  function analyseEmail(e: InboxEmail) {
+    reset()
+    setEmail(e)
+    // A quarantined email may carry instructions aimed at AI tools: keyword rules only, never our AI.
+    for (const s of splitSentences(e.body)) addLine('them', s, { offline: e.quarantined })
   }
 
   function sendTyped(e: React.FormEvent) {
@@ -78,7 +89,9 @@ export default function App() {
       {convo.result.risk >= 70 && (
         <div role="alert" className="bg-alarm text-white">
           <div className="mx-auto max-w-6xl px-4 py-3 text-lg font-semibold sm:px-6">
-            Hang up: this call matches a known scam script. Call the organisation back on a number you already have.
+            {mode === 'email'
+              ? "Don't reply, click or pay: this email matches a known scam script. Contact the organisation through its official website or app."
+              : 'Hang up: this call matches a known scam script. Call the organisation back on a number you already have.'}
           </div>
         </div>
       )}
@@ -158,6 +171,8 @@ export default function App() {
             </div>
           )}
 
+          {mode === 'email' && <EmailPanel onAnalyse={analyseEmail} selectedId={email?.id} />}
+
           {mode === 'live' && (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-ink-soft">
@@ -198,7 +213,20 @@ export default function App() {
         {/* The call and their script */}
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
           <section aria-label="The call" className="max-h-[70vh] min-h-64 overflow-y-auto rounded-lg bg-white p-6">
+            {mode === 'email' && email && (
+              <div className="mb-5 border-b border-rule pb-3 text-sm">
+                <p className="font-semibold">{email.originalSubject ?? email.subject}</p>
+                <p className="text-ink-soft">{email.forwarded ? `Originally from ${email.originalFrom ?? 'unknown'}` : `From ${email.from}`}</p>
+                {email.quarantined && (
+                  <p className="mt-2 rounded-md bg-alarm px-3 py-2 font-semibold text-white">
+                    This email contains hidden instructions aimed at AI tools (Agentboxd prompt-injection check). It was not
+                    sent to our AI; keyword rules read it instead. Treat it as a scam.
+                  </p>
+                )}
+              </div>
+            )}
             <Transcript
+              themLabel={mode === 'email' ? 'Email' : 'Caller'}
               lines={convo.lines}
               history={convo.result.history}
               reactions={convo.result.reactions}

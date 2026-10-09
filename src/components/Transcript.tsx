@@ -10,10 +10,12 @@ interface Props {
   interim?: string
   /** Swap Caller/You on a line the AI attributed wrongly. */
   onFlip?: (id: number) => void
+  /** Name shown for the other party: "Caller" for calls, "Email" for emails. */
+  themLabel?: string
 }
 
 /** The call, set like a screenplay: the scam is a script, so we print it as one. */
-export function Transcript({ lines, history, reactions, interim, onFlip }: Props) {
+export function Transcript({ lines, history, reactions, interim, onFlip, themLabel = 'Caller' }: Props) {
   const end = useRef<HTMLDivElement>(null)
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -45,10 +47,10 @@ export function Transcript({ lines, history, reactions, interim, onFlip }: Props
                   title="Wrong person? Click to swap Caller and You."
                   className="rounded px-1 underline decoration-rule decoration-dotted underline-offset-4 hover:bg-paper"
                 >
-                  {them ? 'Caller' : 'You'}
+                  {them ? themLabel : 'You'}
                 </button>
               ) : them ? (
-                'Caller'
+                themLabel
               ) : (
                 'You'
               )}
