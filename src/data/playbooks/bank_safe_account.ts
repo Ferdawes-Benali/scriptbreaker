@@ -113,7 +113,7 @@ export default {
         "tell the bank it's for a family member",
         "there's no time to go to the branch"
       ],
-      "expectedAsk": "They will stop you from hanging up or calling your real bank.",
+      "expectedAsk": "They will stop you from checking with your real bank.",
       "breakMove": "Hang up now and call your bank's official number."
     }
   ]
