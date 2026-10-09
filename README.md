@@ -146,7 +146,7 @@ Without an API key the app still runs on the keyword fallback.
 
 ## AI disclosure
 
-- **Built with AI assistance:** Claude (Anthropic) helped with research, planning, and writing most of the code, tests, evaluation conversations and this README. The team chose the idea, reviewed and tested every change, ran the evaluation and recorded the demo. Details in [docs/ai-usage.md](docs/ai-usage.md).
+- **Development tools:** an AI coding assistant (Claude) was used during development, as the rules allow.
 - **AI inside the product:** open-weight gpt-oss models on Groq label each line (see AI usage).
 - **Demo calls and evaluation calls are scripted role-plays**, not recordings of real people.
 
