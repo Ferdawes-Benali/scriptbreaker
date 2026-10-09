@@ -204,7 +204,7 @@ export default function App() {
                   placeholder="Or type a line from the call"
                   className="flex-1 rounded-md border border-rule bg-white px-3 py-2"
                 />
-                <button className="rounded-md border border-ink px-3 py-2 font-semibold">Add line</button>
+                <button className="whitespace-nowrap rounded-md border border-ink px-3 py-2 font-semibold">Add line</button>
               </form>
             </div>
           )}
@@ -212,7 +212,7 @@ export default function App() {
 
         {/* The call and their script */}
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-          <section aria-label="The call" className="max-h-[70vh] min-h-64 overflow-y-auto rounded-lg bg-white p-6">
+          <section aria-label="The call" className="min-h-64 rounded-lg bg-white p-6 lg:max-h-[70vh] lg:overflow-y-auto">
             {mode === 'email' && email && (
               <div className="mb-5 border-b border-rule pb-3 text-sm">
                 <p className="font-semibold">{email.originalSubject ?? email.subject}</p>

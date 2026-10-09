@@ -111,7 +111,7 @@ _Run on Oct 8, 2026 with `openai/gpt-oss-20b`. The AI's answers vary a little be
 | Email channel: forward a suspicious email to the Agentboxd inbox and analyse it | Works (shared demo inbox) |
 | Emails with hidden instructions for AI tools are quarantined and never sent to our AI | Works (uses Agentboxd's prompt-injection score) |
 | Emails held by Agentboxd's phishing screening are shown as held, with their score | Works; release one in the Agentboxd dashboard to read its script |
-| Evaluation harness (`npm run eval`) and 34 unit tests | Works |
+| Evaluation harness (`npm run eval`) and 35 unit tests | Works |
 
 ## What doesn't (yet)
 

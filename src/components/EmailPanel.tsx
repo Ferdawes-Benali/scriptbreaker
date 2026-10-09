@@ -107,7 +107,10 @@ export function EmailPanel({ onAnalyse, selectedId }: Props) {
       {emails.length > 0 && (
         <ul className="divide-y divide-rule rounded-md border border-rule bg-white">
           {emails.map((e) => (
-            <li key={e.id} className={`flex flex-wrap items-center gap-3 px-3 py-2 ${selectedId === e.id ? 'bg-cue-soft' : ''}`}>
+            <li
+              key={e.id}
+              className={`flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-3 ${selectedId === e.id ? 'bg-cue-soft' : ''}`}
+            >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{e.originalSubject ?? e.subject}</p>
                 <p className="truncate text-sm text-ink-soft">
@@ -115,12 +118,12 @@ export function EmailPanel({ onAnalyse, selectedId }: Props) {
                 </p>
                 <div className="mt-1 flex flex-wrap gap-1.5 text-xs">
                   {e.held && (
-                    <span className="rounded-full bg-alarm px-2 py-0.5 font-semibold text-white">
+                    <span className="rounded-md bg-alarm px-2 py-0.5 font-semibold text-white">
                       Held by Agentboxd ({e.heldReason}) before any AI could read it
                     </span>
                   )}
                   {e.quarantined && (
-                    <span className="rounded-full bg-alarm px-2 py-0.5 font-semibold text-white">
+                    <span className="rounded-md bg-alarm px-2 py-0.5 font-semibold text-white">
                       Hidden instructions for AI tools: quarantined
                     </span>
                   )}
@@ -135,13 +138,13 @@ export function EmailPanel({ onAnalyse, selectedId }: Props) {
                 </div>
               </div>
               {e.held && !e.body ? (
-                <span className="max-w-56 text-right text-xs text-ink-soft">
+                <span className="text-xs text-ink-soft sm:max-w-56 sm:text-right">
                   Release it in your Agentboxd dashboard to read its scam script here.
                 </span>
               ) : (
                 <button
                   onClick={() => onAnalyse(e)}
-                  className="rounded-md border border-ink px-3 py-1.5 text-sm font-semibold hover:bg-paper"
+                  className="self-start rounded-md sm:self-auto border border-ink px-3 py-1.5 text-sm font-semibold hover:bg-paper"
                 >
                   Analyse
                 </button>
